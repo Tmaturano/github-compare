@@ -1,3 +1,4 @@
+/* eslint-disable linebreak-style */
 import React, { Fragment } from 'react';
 
 import GlobalStyle from './styles/global';
