@@ -1,8 +1,9 @@
 /* eslint-disable react/no-access-state-in-setstate */
 /* eslint-disable react/destructuring-assignment */
 import React, { Component } from 'react';
-import api from '../../services/api';
+import moment from 'moment';
 
+import api from '../../services/api';
 import logo from '../../assets/logo.png';
 
 import { Container, Form } from './styles';
@@ -19,11 +20,15 @@ export default class Main extends Component {
     e.preventDefault();
 
     try {
-      const response = await api.get(`/repos/${this.state.repositoryInput}`);
+      // desestructuration and renaming
+      const { data: repository } = await api.get(`/repos/${this.state.repositoryInput}`);
+
+      // creating a new property called lastCommit
+      repository.lastCommit = moment(repository.pushed_at).fromNow();
 
       this.setState({
         repositoryInput: '',
-        repositories: [...this.state.repositories, response.data], // spread operator
+        repositories: [...this.state.repositories, repository], // spread operator
       });
     } catch (err) {
       console.log(err);
