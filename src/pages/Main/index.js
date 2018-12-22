@@ -17,30 +17,46 @@ export default class Main extends Component {
     repositories: [],
   };
 
+  async componentDidMount() {
+    this.setState({ loading: true });
+
+    this.setState({ loading: false, repositories: await this.getLocalRepositories() });
+  }
+
 
   handleAddRepository = async (e) => {
     e.preventDefault();
 
     this.setState({ loading: true });
 
+    const { repositoryInput, repositories } = this.state;
+
     try {
       // desestructuration and renaming
-      const { data: repository } = await api.get(`/repos/${this.state.repositoryInput}`);
+      const { data: repository } = await api.get(`/repos/${repositoryInput}`);
 
       // creating a new property called lastCommit
       repository.lastCommit = moment(repository.pushed_at).fromNow();
 
       this.setState({
         repositoryInput: '',
-        repositories: [...this.state.repositories, repository], // spread operator
+        repositories: [...repositories, repository], // spread operator
         repositoryError: false,
       });
+
+      const localRepositories = await this.getLocalRepositories();
+      await localStorage.setItem(
+        '@GitCompare:repositories',
+        JSON.stringify([...localRepositories, repository]),
+      );
     } catch (err) {
       this.setState({ repositoryError: true });
     } finally {
       this.setState({ loading: false });
     }
   };
+
+  getLocalRepositories = async () => JSON.parse(await localStorage.getItem('@GitCompare:repositories')) || [];
 
   render() {
     return (
