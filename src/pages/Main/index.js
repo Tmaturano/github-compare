@@ -61,7 +61,10 @@ export default class Main extends Component {
         JSON.stringify([...localRepositories, repository]),
       );
     } catch (err) {
-      this.setState({ repositoryError: true });
+      this.setState({
+        repositoryError: true,
+        errorMessage: 'There was an error when trying to add the repository',
+      });
     } finally {
       this.setState({ loading: false });
     }
@@ -76,6 +79,30 @@ export default class Main extends Component {
     this.setState({ repositories: updatedRepositories });
 
     await localStorage.setItem('@GitCompare:repositories', JSON.stringify(updatedRepositories));
+  }
+
+  handleUpdateRepository = async (id) => {
+    const { repositories } = this.state;
+
+    const repository = repositories.find(r => r.id === id);
+    try {
+      const { data } = await api.get(`/repos/${repository.full_name}`);
+      data.lastCommit = moment(data.pushed_at).fromNow();
+
+      this.setState({
+        repositoryError: false,
+        repositoryInput: '',
+        errorMessage: '',
+        repositories: repositories.map(r => (r.id === data.id ? data : r)),
+      });
+
+      localStorage.setItem('@GitCompare:repositories', JSON.stringify(repositories));
+    } catch (err) {
+      this.setState({
+        repositoryError: true,
+        errorMessage: 'There was an error when trying to update the repository',
+      });
+    }
   }
 
   handleInputOnChange = async (e) => {
@@ -111,6 +138,7 @@ export default class Main extends Component {
         <CompareList
           repositories={this.state.repositories}
           removeRepository={this.handleRemoveRepository}
+          updateRepository={this.handleUpdateRepository}
         />
       </Container>
     );
