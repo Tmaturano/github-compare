@@ -5,6 +5,14 @@ export const Container = styled.div`
   flex-direction: column;
   align-items: center;
   padding-top: 60px;
+
+  span {
+    color:#FFF;
+    font-size: 18px;
+    font-weight: bold;
+    justify-content: center;
+    margin-top: 10px;
+  }
 `;
 
 export const Form = styled.form`
@@ -25,7 +33,7 @@ export const Form = styled.form`
     border: ${props => (props.withError ? '2px solid #F00' : 0)};
   }
 
-  button{
+  button {
     width:80px;
     height: 55px;
     padding: 0 20px;

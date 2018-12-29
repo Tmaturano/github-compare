@@ -15,6 +15,7 @@ export default class Main extends Component {
     repositoryError: false,
     repositoryInput: '',
     repositories: [],
+    errorMessage: '',
   };
 
   async componentDidMount() {
@@ -38,10 +39,20 @@ export default class Main extends Component {
       // creating a new property called lastCommit
       repository.lastCommit = moment(repository.pushed_at).fromNow();
 
+      if (repositories.filter(r => r.id === repository.id).length > 0) {
+        this.setState({
+          repositoryError: true,
+          errorMessage: 'There is already a repository with the given owner/repository',
+        });
+
+        return;
+      }
+
       this.setState({
         repositoryInput: '',
         repositories: [...repositories, repository], // spread operator
         repositoryError: false,
+        errorMessage: '',
       });
 
       const localRepositories = await this.getLocalRepositories();
@@ -58,6 +69,26 @@ export default class Main extends Component {
 
   getLocalRepositories = async () => JSON.parse(await localStorage.getItem('@GitCompare:repositories')) || [];
 
+  handleRemoveRepository = async (id) => {
+    const { repositories } = this.state;
+
+    const updatedRepositories = repositories.filter(repository => repository.id !== id);
+    this.setState({ repositories: updatedRepositories });
+
+    await localStorage.setItem('@GitCompare:repositories', JSON.stringify(updatedRepositories));
+  }
+
+  handleInputOnChange = async (e) => {
+    if (e.target.value === '') {
+      this.setState({
+        repositoryError: false,
+        errorMessage: '',
+      });
+    }
+
+    this.setState({ repositoryInput: e.target.value });
+  }
+
   render() {
     return (
       <Container>
@@ -68,14 +99,19 @@ export default class Main extends Component {
             type="text"
             placeholder="ex: facebook/react"
             value={this.state.repositoryInput}
-            onChange={e => this.setState({ repositoryInput: e.target.value })}
+            onChange={e => this.handleInputOnChange(e)}
           />
           <button type="submit">
             {this.state.loading ? <i className="fa fa-spinner fa-pulse" /> : 'OK'}
           </button>
         </Form>
 
-        <CompareList repositories={this.state.repositories} />
+        <span>{this.state.errorMessage}</span>
+
+        <CompareList
+          repositories={this.state.repositories}
+          removeRepository={this.handleRemoveRepository}
+        />
       </Container>
     );
   }
